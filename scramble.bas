@@ -616,7 +616,11 @@ END SUB
 
 SUB RenderStartKey
     STATIC counter&, pressed%
-    IF counter& MOD game.fps% < game.fps% * 0.8 THEN RenderText 4, 31, "PRESS SPACE TO START", TEXT_WHITE
+    SELECT CASE (counter& MOD (game.fps% * 6)) / game.fps%
+        CASE 0 TO 1.6: RenderText 4, 31, "PRESS SPACE TO START", TEXT_WHITE
+        CASE 2 TO 3.6: RenderText 3, 31, "ARROW KEYS TO FLY SHIP", TEXT_WHITE
+        CASE 4 TO 5.6: RenderText 1, 31, "A TO FIRE - Z TO DROP BOMB", TEXT_WHITE
+    END SELECT
     IF _KEYDOWN(32) THEN pressed% = TRUE ELSE IF pressed% = TRUE THEN pressed% = FALSE: SetGameState STATE_STARTING_GAME
     counter& = counter& + 1
 END SUB
@@ -1226,7 +1230,7 @@ END SUB
 SUB SetGameState (s%)
     game.state% = s%
     game.frameCounter& = 0
-    IF s% = STATE_TITLE THEN game.stage% = 0: player.fuelSpeed% = INITIAL_FUEL_SPEED
+    IF s% = STATE_TITLE OR s% = STATE_HIGHSCORES THEN game.stage% = 0: player.fuelSpeed% = INITIAL_FUEL_SPEED
     IF s% = STATE_STARTING_GAME THEN game.lives% = 3: game.score% = 0: game.hiscore% = hiscores%(0): game.flagCount% = 1: PrepareForLevel: PlaySfx SFX_START_GAME
     IF s% = STATE_GAME_OVER THEN StopSfx SFX_FUEL_WARNING: StopSfx SFX_ENGINE: CheckScore
     IF s% = STATE_REACHED_BASE THEN StopSfx SFX_FUEL_WARNING: StopSfx SFX_ENGINE
