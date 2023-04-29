@@ -38,44 +38,41 @@ OPTION _EXPLICITARRAY
 CONST FALSE = 0
 CONST TRUE = NOT FALSE
 
-CONST SCREEN_WIDTH = 224
+CONST SCREEN_WIDTH = 224 ' Resolution of the original arcade game - changing this to 448 (for example) should give a fuly playable version in a more widescreen mode
 CONST SCREEN_HEIGHT = 256
-CONST NUM_STAGES = 6
-CONST TILE_WIDTH = 8
+CONST NUM_STAGES = 6 ' Scramble has six distinct stages
+CONST TILE_WIDTH = 8 ' All graphics are based on 8x8 pixel tiles
 CONST TILE_HEIGHT = 8
-CONST NUM_COLUMNS = INT(SCREEN_WIDTH / TILE_WIDTH)
-CONST NUM_ROWS = 25
+CONST NUM_COLUMNS = INT(SCREEN_WIDTH / TILE_WIDTH) ' Used primarily for displayuing the landscape
+CONST NUM_ROWS = 25 ' This is the number of (8 pixel) rows in the actual gaming area (not including HUD)
 CONST GAME_HEIGHT = NUM_ROWS * TILE_HEIGHT
 
-CONST KEYDOWN_LEFT = 19200
+CONST KEYDOWN_LEFT = 19200 ' Scan codes for the keys
 CONST KEYDOWN_RIGHT = 19712
 CONST KEYDOWN_UP = 18432
 CONST KEYDOWN_DOWN = 20480
 CONST KEYDOWN_FIRE = 97
 CONST KEYDOWN_BOMB = 122
 
-CONST PLAYER_FLYING = 0
+CONST PLAYER_FLYING = 0 ' States for the player
 CONST PLAYER_EXPLODING = 1
 CONST PLAYER_SPAWNING = 2
 
-CONST PLAYER_WIDTH = 32
+CONST PLAYER_WIDTH = 32 ' Dimensions of the player's sprite
 CONST PLAYER_HEIGHT = 16
 
-CONST MAX_FUEL = 112
-CONST INITIAL_FUEL_SPEED = 20
-CONST DELTA_FUEL_SPEED_PER_PASS = 2
+CONST MAX_FUEL = 112 ' Quantity of fuel that the player can carry
+CONST INITIAL_FUEL_SPEED = 20 ' Initial setting reduces fuel by one every INITIAL_FUEL_SPEED frames
+CONST DELTA_FUEL_SPEED_PER_PASS = 2 ' After completing all six stages, the speed at which fuel goes down is increased
 
-CONST AMMO_BULLET = 18
-CONST AMMO_BOMB = 8
-
-CONST TYPE_MISSILE = 0
+CONST TYPE_MISSILE = 0 ' Different object types
 CONST TYPE_FUEL = 1
 CONST TYPE_MYSTERY = 2
 CONST TYPE_BASE = 3
 CONST TYPE_METEOR = 4
 CONST TYPE_UFO = 5
 
-CONST SPRITE_ROCKET = 0
+CONST SPRITE_ROCKET = 0 ' Different sprites available in the game
 CONST SPRITE_FUEL = 1
 CONST SPRITE_MYSTERY = 2
 CONST SPRITE_BASE = 3
@@ -96,7 +93,10 @@ CONST SPRITE_STAGE = 17
 CONST SPRITE_BULLET = 18
 CONST SPRITE_TEXT = 19
 
-CONST SFX_LASER = 0
+CONST AMMO_BULLET = SPRITE_BULLET ' Pulling out the ammo types for code clarity
+CONST AMMO_BOMB = SPRITE_BOMB
+
+CONST SFX_LASER = 0 ' All available sound effects
 CONST SFX_FUEL_WARNING = 1
 CONST SFX_SMALL_EXPLOSION = 2
 CONST SFX_ENGINE = 3
@@ -105,15 +105,15 @@ CONST SFX_BOMB = 5
 CONST SFX_START_GAME = 6
 CONST SFX_EXPLOSION = 7
 
-CONST text$ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789?c.- "
+CONST text$ = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789?c.- " ' Available font characters
 
-CONST TEXT_WHITE = 0
+CONST TEXT_WHITE = 0 ' Text is stored in five colours in the sprite sheet (for simplicity)
 CONST TEXT_RED = 1
 CONST TEXT_BLUE = 2
 CONST TEXT_YELLOW = 3
 CONST TEXT_PURPLE = 4
 
-CONST STATE_TITLE = 0
+CONST STATE_TITLE = 0 ' Different game states used in the game
 CONST STATE_HIGHSCORES = 1
 CONST STATE_SCORETABLE = 2
 CONST STATE_DEMO = 3
@@ -130,60 +130,60 @@ TYPE POINT
 END TYPE
 
 TYPE RECT
-    x AS INTEGER
-    y AS INTEGER
-    w AS INTEGER
-    h AS INTEGER
-    cx AS INTEGER
-    cy AS INTEGER
+    x AS INTEGER ' Left
+    y AS INTEGER ' Top
+    w AS INTEGER ' Width
+    h AS INTEGER ' Height
+    cx AS INTEGER ' Centre x
+    cy AS INTEGER ' Centre y
 END TYPE
 
 TYPE SPRITE
-    spriteId AS INTEGER
+    spriteId AS INTEGER ' SPRITE_* id
     position AS POINT
-    frame AS INTEGER
-    counter AS INTEGER
+    frame AS INTEGER ' For sprites with multiple frames of animation
+    counter AS INTEGER ' Generic counter
 END TYPE
 
-TYPE SPRITEDATA
-    offset AS INTEGER
+TYPE SPRITEDATA ' One entry for each SPRITE_*
+    offset AS INTEGER ' Offset into sprite list - some sprites have multiple frames so sprite 2 won't necessarily by the 2nd sprite in the list
     size AS POINT
-    hitbox AS RECT
+    hitbox AS RECT ' This is as good as it gets - 1980's arcade games really don't want or need per pixel collision! We want a little leniency on player collisions at the very least!
 END TYPE
 
 TYPE PLAYER
-    sprite AS SPRITE
-    state AS INTEGER
-    fuel AS INTEGER
-    fuelCounter AS INTEGER
-    fuelSpeed AS INTEGER
-    firePause AS INTEGER
-    firePressed AS INTEGER
-    bombPause AS INTEGER
-    bombPressed AS INTEGER
+    sprite AS SPRITE ' Player sprite
+    state AS INTEGER ' PLAYER_* state
+    fuel AS INTEGER ' Amount of fuel remaining
+    fuelCounter AS INTEGER ' Frame counter as fuel goes down by one every fuelSpeed frames
+    fuelSpeed AS INTEGER ' Rate of fuel usage
+    firePause AS INTEGER ' Slight minimum delay between bullets
+    firePressed AS INTEGER ' Flag used to prevent constant bullets when fire button held down
+    bombPause AS INTEGER ' Slight minimum delay between bombs
+    bombPressed AS INTEGER ' Flag used to prevent constant bombs when bomb button held down
 END TYPE
 
-TYPE OBJECT
+TYPE OBJECT ' Used for every game object (other than player)
     sprite AS SPRITE
-    inFlight AS INTEGER
+    inFlight AS INTEGER ' Specific to missiles but sits in this structure because we're lacking virtuals in QB64
 END TYPE
-
+                                                                                                          s
 TYPE GAME
     frameCounter AS LONG
     fps AS INTEGER
-    dataIndex AS INTEGER
-    columnIndex AS INTEGER
-    stage AS INTEGER
-    currentPalette AS INTEGER
-    progressPalette AS INTEGER
+    dataIndex AS INTEGER ' Index into the BIN file containing all landscape and enemy positioning data
+    columnIndex AS INTEGER ' This is more of a toggle really, alternating between zero and one for each column displayed on the screen - used for landscape tiling effect on higher stages
+    stage AS INTEGER ' Current game stage (0 to 5)
+    currentPalette AS INTEGER ' The palette being used (0 to 7)
+    progressPalette AS INTEGER ' Palettes change as you progress through each stage - this is the counter used to trigger each change
     score AS INTEGER
     hiscore AS INTEGER
     lives AS INTEGER
-    scrollOffset AS INTEGER
-    state AS INTEGER
-    highlightScore AS INTEGER
-    baseDestroyed AS INTEGER
-    flagCount AS INTEGER
+    scrollOffset AS INTEGER ' How far into the current stage the player is (in pixels)
+    state AS INTEGER ' STATE_* game state
+    highlightScore AS INTEGER ' We highlight a score on the high score table if the player has achieved it in the last game
+    baseDestroyed AS INTEGER ' You need to destroy the base on stage 6 to actually complete that stage
+    flagCount AS INTEGER ' Number of times all six stages have been completed in a game
 END TYPE
 
 TYPE COLUMN
@@ -202,7 +202,7 @@ TYPE STARS
     sprite0 AS LONG
     sprite1 AS LONG
     sprite2 AS LONG
-    sprite3 AS LONG
+    sprite3 AS LON
     frame AS INTEGER
     counter AS INTEGER
 END TYPE
